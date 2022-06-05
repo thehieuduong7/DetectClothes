@@ -54,8 +54,8 @@ def reg(X_Test):
     return labels[np.argmax(predictions)]
 
 
-# #%%
-# result = cv2.imread('./image/shirt.png')
+#%%
+# result = cv2.imread('./image/')
 # print(result)
 
 # print(reg(result))
@@ -64,14 +64,13 @@ def reg(X_Test):
 # cv2.destroyAllWindows()
 
 # %%
-# (X_train, y_train), (X_test, y_test) = datasets.fashion_mnist.load_data()
-# #%%
-# id = 6
-# print(reg(X_test[id]))
-# print(y_test[id])
-# # pic = cv2.resize(X_test[id], (480, 680))
-# print(X_test[id])
-# cv2.imshow('test', X_test[id])
-# cv2.waitKey()
-# cv2.destroyAllWindows()
+(X_train, y_train), (X_test, y_test) = datasets.fashion_mnist.load_data()
+#%%
+id = 6
+print(reg(X_test[id]))
+print(labels[y_test[id]])
+# pic = cv2.resize(X_test[id], (480, 680))
+cv2.imshow('test', X_test[id])
+cv2.waitKey()
+cv2.destroyAllWindows()
 # %%

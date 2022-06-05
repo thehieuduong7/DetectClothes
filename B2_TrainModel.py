@@ -1,26 +1,45 @@
 #%%
-import numpy as np
-import cv2
 
-from tensorflow.keras.models import model_from_json
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras import datasets
+import tensorflow as tf
+from tensorflow.keras import datasets, layers, models, optimizers
 
-model_architecture = "stored/digit_config.json"
-model_weights = "stored/digit_weight.h5"
-model = model_from_json(open(model_architecture).read())
-model.load_weights(model_weights)
 
-optim = Adam()
-model.compile(loss="categorical_crossentropy",
-              optimizer=optim,
-              metrics=["accuracy"])
+#define the convnet
+class LeNet:
+
+    @staticmethod
+    def build(input_shape, classes):
+        model = models.Sequential()
+        # CONV => RELU => POOL
+        model.add(
+            layers.Convolution2D(20, (5, 5),
+                                 activation='relu',
+                                 input_shape=input_shape))
+        model.add(layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        # CONV => RELU => POOL
+        model.add(layers.Convolution2D(50, (5, 5), activation='relu'))
+        model.add(layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        # Flatten => RELU layers
+        model.add(layers.Flatten())
+        model.add(layers.Dense(500, activation='relu'))
+        # a softmax classifier
+        model.add(layers.Dense(classes, activation="softmax"))
+        return model
+
+
+# network and training
+EPOCHS = 20
+BATCH_SIZE = 128
+VERBOSE = 1
+OPTIMIZER = tf.keras.optimizers.Adam()
+VALIDATION_SPLIT = 0.2
+
+IMG_ROWS, IMG_COLS = 28, 28  # input image dimensions
+INPUT_SHAPE = (IMG_ROWS, IMG_COLS, 1)
+NB_CLASSES = 10  # number of outputs = number of digits
 
 # data: shuffled and split between train and test sets
 (X_train, y_train), (X_test, y_test) = datasets.fashion_mnist.load_data()
-
-#%%
-X_test_img = X_test
 
 # reshape
 X_train = X_train.reshape((60000, 28, 28, 1))
@@ -33,21 +52,41 @@ X_train, X_test = X_train / 255.0, X_test / 255.0
 X_train = X_train.astype('float32')
 X_test = X_test.astype('float32')
 
-for i in range(0, 10):
-    index = np.random.randint(0, 9999)
-    sample = np.array([X_test[index]])
-    predictions = model.predict(sample)
-    predictions = predictions[0]
-    print(predictions)
-    print("Nhan dang:", np.argmax(predictions), type(predictions))
-    print(y_test[index])
-    image = X_test_img[index]
-    m = cv2.moments(image)
-    cy = int(m["m10"] / m["m00"])
-    cx = int(m["m01"] / m["m00"])
-    print(cx, cy)
+print(X_train.shape[0], 'train samples')
+print(X_test.shape[0], 'test samples')
 
-    cv2.imshow('digit', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-#%%
+# convert class vectors to binary class matrices
+y_train = tf.keras.utils.to_categorical(y_train, NB_CLASSES)
+y_test = tf.keras.utils.to_categorical(y_test, NB_CLASSES)
+
+# initialize the optimizer and model
+model = LeNet.build(input_shape=INPUT_SHAPE, classes=NB_CLASSES)
+model.compile(loss="categorical_crossentropy",
+              optimizer=OPTIMIZER,
+              metrics=["accuracy"])
+model.summary()
+
+# use TensorBoard, princess Aurora!
+callbacks = [
+    # Write TensorBoard logs to `./logs` directory
+    tf.keras.callbacks.TensorBoard(log_dir='./logs')
+]
+
+# fit
+history = model.fit(X_train,
+                    y_train,
+                    batch_size=BATCH_SIZE,
+                    epochs=EPOCHS,
+                    verbose=VERBOSE,
+                    validation_split=VALIDATION_SPLIT,
+                    callbacks=callbacks)
+
+#save to disk
+model_json = model.to_json()
+with open('digit_config.json', 'w') as json_file:
+    json_file.write(model_json)
+model.save_weights('digit_weight.h5')
+
+score = model.evaluate(X_test, y_test, verbose=VERBOSE)
+print("\nTest score:", score[0])
+print('Test accuracy:', score[1])

@@ -27,7 +27,7 @@ def getContours(mask, img):
     return img
 
 
-img = cv2.imread('image/t_shirt_3.png')
+img = cv2.imread('image/t_shirt_1.png')
 img = cv2.resize(img, (700, 500))
 update = False
 
@@ -57,13 +57,11 @@ while True:
     upper = np.array([hue_max, sat_max, val_max])
     mask = cv2.inRange(img_hsv, lower, upper)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
+    result = cv2.bitwise_and(img, img, mask=mask)
+    result = getContours(mask, result)
     cv2.imshow("TrackBars", img)
     cv2.imshow("hsv", img_hsv)
     cv2.imshow("mask", mask)
-    result = cv2.bitwise_and(img, img, mask=mask)
-    img_gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-    result = getContours(mask, result)
-    cv2.imshow("img_gray", img_gray)
     cv2.imshow("result", result)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
