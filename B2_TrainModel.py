@@ -83,9 +83,9 @@ history = model.fit(X_train,
 
 #save to disk
 model_json = model.to_json()
-with open('digit_config.json', 'w') as json_file:
+with open('stored/digit_config.json', 'w') as json_file:
     json_file.write(model_json)
-model.save_weights('digit_weight.h5')
+model.save_weights('stored/digit_weight.h5')
 
 score = model.evaluate(X_test, y_test, verbose=VERBOSE)
 print("\nTest score:", score[0])

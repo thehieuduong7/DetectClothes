@@ -27,9 +27,8 @@ def getContours(mask, img):
     return img
 
 
-img = cv2.imread('image/t_shirt_1.png')
+img = cv2.imread('image/trousers_1.png')
 img = cv2.resize(img, (700, 500))
-update = False
 
 
 def doSt(x):
